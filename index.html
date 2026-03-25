@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ISHIKO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #050a12;
+      color: #7ec8e3;
+      font-family: 'Share Tech Mono', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    #stars {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    #container {
+      position: relative;
+      z-index: 1;
+      width: 640px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: 22px;
+      letter-spacing: 0.3em;
+      text-shadow: 0 0 20px rgba(126, 200, 227, 0.4);
+      margin-bottom: 22px;
+    }
+
+    #stats {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      padding: 14px 30px;
+      border: 1px solid #0d2233;
+      background: rgba(0, 20, 40, 0.7);
+      margin-bottom: 14px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat .num {
+      font-family: 'Orbitron', monospace;
+      font-size: 28px;
+      color: #7ec8e3;
+    }
+
+    .stat .label {
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      color: #3a6070;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    #progress {
+      width: 100%;
+      height: 3px;
+      background: #0d2233;
+      margin-bottom: 14px;
+    }
+
+    #progressBar {
+      height: 100%;
+      width: 100%;
+      background: #7ec8e3;
+      box-shadow: 0 0 8px #7ec8e3;
+      transition: width 1s linear;
+    }
+
+    #wordsBox {
+      width: 100%;
+      height: 128px;
+      overflow: hidden;
+      border: 1px solid #0d2233;
+      background: rgba(0, 15, 30, 0.6);
+      margin-bottom: 14px;
+    }
+
+    #words {
+      padding: 14px 18px;
+      font-size: 19px;
+      line-height: 2;
+      transition: transform 0.15s ease;
+    }
+
+    .word         { display: inline; margin-right: 10px; color: #2e6880; }
+    .word.correct { color: #4a9ebb; }
+    .word.wrong   { color: #ff4d6d; text-decoration: underline; }
+    .word.active  { color: #c8ecf8; }
+
+    #typeInput {
+      width: 100%;
+      padding: 12px 16px;
+      background: #030d18;
+      border: 1px solid #0d2233;
+      border-bottom: 2px solid #7ec8e3;
+      color: #7ec8e3;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 17px;
+      outline: none;
+      transition: border-bottom-color 0.15s;
+    }
+
+    #typeInput:focus    { border-bottom-color: #c8ecf8; }
+    #typeInput.error    { border-bottom-color: #ff4d6d; }
+    #typeInput:disabled { opacity: 0.3; }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 10px;
+      color: #1e4d66;
+      letter-spacing: 0.25em;
+      text-align: center;
+    }
+
+    #result {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+
+    #result .title {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      letter-spacing: 0.5em;
+      color: #3a6070;
+      text-transform: uppercase;
+    }
+
+    #result .bigScore {
+      font-family: 'Orbitron', monospace;
+      font-size: 80px;
+      line-height: 1;
+      text-shadow: 0 0 30px rgba(126, 200, 227, 0.5);
+    }
+
+    #result .sub {
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      color: #3a6070;
+      text-transform: uppercase;
+    }
+
+    #result .breakdown {
+      border: 1px solid #0d2233;
+      background: rgba(0, 20, 40, 0.7);
+      padding: 14px 40px;
+      display: flex;
+      gap: 40px;
+    }
+
+    .mission-badge {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      padding: 6px 18px;
+      border: 1px solid;
+    }
+
+    .success { color: #4aff91; border-color: #4aff91; text-shadow: 0 0 10px #4aff91; }
+    .fail    { color: #ff4d6d; border-color: #ff4d6d; text-shadow: 0 0 10px #ff4d6d; }
+
+    button {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      padding: 11px 28px;
+      background: transparent;
+      border: 1px solid #7ec8e3;
+      color: #7ec8e3;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: #7ec8e3;
+      color: #050a12;
+    }
+
+  </style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div id="container">
+
+  <h1>☆ CHALLENGER ☆</h1>
+
+  <!-- game screen -->
+   
+  <div id="gameArea" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+
+    <div id="stats">
+      <div class="stat">
+        <div class="num" id="wpm">0</div>
+        <div class="label">Speed (wpm)</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="time">30</div>
+        <div class="label">Time (sec)</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="accuracy">100</div>
+        <div class="label">Accuracy</div>
+      </div>
+    </div>
+
+    <div id="progress">
+      <div id="progressBar"></div>
+    </div>
+
+    <div id="wordsBox">
+      <div id="words"></div>
+    </div>
+
+    <input id="typeInput" placeholder="start typing..."
+      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+    <div class="hint">SPACE — submit word &nbsp;·&nbsp; TAB — restart</div>
+
+  </div>
+
+  <div id="result">
+    <div class="title">Mission Debrief</div>
+    <div class="bigScore" id="finalWPM">0</div>
+    <div class="sub">words per minute</div>
+
+    <div class="breakdown">
+      <div class="stat">
+        <div class="num" id="finalAcc">—</div>
+        <div class="label">Accuracy</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="finalCorrect">—</div>
+        <div class="label">Correct</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="finalWrong">—</div>
+        <div class="label">Wrong</div>
+      </div>
+    </div>
+
+    <div id="missionBadge" class="mission-badge"></div>
+    <button onclick="restartGame()">↺ &nbsp; New Mission</button>
+  </div>
+
+</div>
+
+<script>
+
+  const starCanvas = document.getElementById("stars")
+  const starCtx    = starCanvas.getContext("2d")
+  let   starList   = []
+
+  function setupStars() {
+    starCanvas.width  = window.innerWidth
+    starCanvas.height = window.innerHeight
+    starList = []
+    for (let i = 0; i < 200; i++) {
+      starList.push({
+        x: Math.random() * starCanvas.width,
+        y: Math.random() * starCanvas.height,
+        r: Math.random() * 1.5,
+        o: Math.random()
+      })
+    }
+  }
+
+  function drawStars() {
+    starCtx.clearRect(0, 0, starCanvas.width, starCanvas.height)
+    for (let s of starList) {
+      starCtx.beginPath()
+      starCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
+      starCtx.fillStyle = "rgba(180,220,255," + s.o + ")"
+      starCtx.fill()
+      s.o += (Math.random() - 0.5) * 0.02
+      s.o  = Math.max(0.05, Math.min(1, s.o))
+    }
+    requestAnimationFrame(drawStars)
+  }
+
+  setupStars()
+  drawStars()
+  window.addEventListener("resize", setupStars)
+
+  const WORDS = [
+    "rocket", "orbit",    "launch",   "gravity",  "cosmos",
+    "nebula", "galaxy",   "module",   "signal",   "vector",
+    "mission","station",  "probe",    "thrust",   "crater",
+    "stellar","comet",    "solar",    "lunar",    "capsule",
+    "booster","payload",  "ignition", "altitude", "velocity",
+    "code",   "debug",    "build",    "data",     "system",
+    "power",  "fuel",     "ship",     "deploy",   "reentry"
+  ]
+
+  let wordList     = []
+  let currentIndex = 0
+  let correctWords = 0
+  let wrongWords   = 0
+  let gameStarted  = false
+  let gameTimer    = null
+  let timeLeft     = 30
+
+  function generateWords() {
+    wordList = []
+    for (let i = 0; i < 80; i++) {
+      wordList.push(WORDS[Math.floor(Math.random() * WORDS.length)])
+    }
+  }
+
+  function renderWords() {
+    const container = document.getElementById("words")
+    container.innerHTML     = ""
+    container.style.transform = "translateY(0px)"
+
+    for (let i = 0; i < wordList.length; i++) {
+      const span = document.createElement("span")
+      span.textContent = wordList[i] + " "   
+      span.id          = "word" + i
+      container.appendChild(span)
+    }
+  }
+
+  function scrollToActive() {
+    const wordsDiv = document.getElementById("words")
+    const activeEl = document.getElementById("word" + currentIndex)
+    if (!activeEl) return
+    const shift = Math.max(0, activeEl.offsetTop - 14)
+    wordsDiv.style.transform = "translateY(-" + shift + "px)"
+  }
+  function startTimer() {
+    gameStarted = true
+    gameTimer = setInterval(() => {
+      timeLeft--
+      document.getElementById("time").textContent        = timeLeft
+      document.getElementById("progressBar").style.width = (timeLeft / 30 * 100) + "%"
+      if (timeLeft <= 0) finishGame()
+    }, 1000)
+  }
+
+  function updateStats() {
+    const elapsed = (30 - timeLeft) || 1
+    const wpm     = Math.round((correctWords / elapsed) * 60)
+    document.getElementById("wpm").textContent = wpm
+
+    const total = correctWords + wrongWords
+    const acc   = total ? Math.round((correctWords / total) * 100) : 100
+    document.getElementById("accuracy").textContent = acc
+  }
+
+  document.getElementById("typeInput").addEventListener("input", (e) => {
+    const value = e.target.value
+
+    if (!gameStarted && value.length > 0) startTimer()
+
+    if (value.endsWith(" ")) {
+      const typed  = value.trim()
+      if (typed === "") { e.target.value = ""; return }
+
+      const wordEl = document.getElementById("word" + currentIndex)
+
+      if (typed === wordList[currentIndex]) {
+        wordEl.className = "word correct"
+        correctWords++
+      } else {
+        wordEl.className = "word wrong"
+        wrongWords++
+      }
+
+      currentIndex++
+      e.target.value = ""
+      e.target.classList.remove("error")
+
+      const next = document.getElementById("word" + currentIndex)
+      if (next) {
+        next.classList.add("active")
+        scrollToActive()
+      }
+
+      updateStats()
+
+    } else {
+      const match = wordList[currentIndex] && wordList[currentIndex].startsWith(value)
+      if (value.length > 0 && !match) e.target.classList.add("error")
+      else                            e.target.classList.remove("error")
+    }
+  })
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Tab") { e.preventDefault(); restartGame() }
+  })
+
+  function finishGame() {
+    clearInterval(gameTimer)
+    document.getElementById("typeInput").disabled = true
+
+    const wpm   = Math.round((correctWords / 30) * 60)
+    const total = correctWords + wrongWords
+    const acc   = total ? Math.round((correctWords / total) * 100) : 100
+
+    setTimeout(() => {
+      document.getElementById("gameArea").style.display = "none"
+      document.getElementById("result").style.display   = "flex"
+
+      document.getElementById("finalWPM").textContent     = wpm
+      document.getElementById("finalAcc").textContent     = acc + "%"
+      document.getElementById("finalCorrect").textContent = correctWords
+      document.getElementById("finalWrong").textContent   = wrongWords
+
+      const badge = document.getElementById("missionBadge")
+      if (wpm >= 50 && acc >= 90) {
+        badge.textContent = "✓  MISSION SUCCESSFUL"
+        badge.className   = "mission-badge success"
+      } else {
+        badge.textContent = "✗  MISSION FAILED — RETRY"
+        badge.className   = "mission-badge fail"
+      }
+    }, 300)
+  }
+
+  function restartGame() {
+    clearInterval(gameTimer)
+
+    currentIndex = 0
+    correctWords = 0
+    wrongWords   = 0
+    timeLeft     = 30
+    gameStarted  = false
+
+    document.getElementById("gameArea").style.display        = "flex"
+    document.getElementById("result").style.display          = "none"
+    document.getElementById("wpm").textContent               = "0"
+    document.getElementById("time").textContent              = "30"
+    document.getElementById("accuracy").textContent          = "100"
+    document.getElementById("progressBar").style.width       = "100%"
+
+    const inp = document.getElementById("typeInput")
+    inp.disabled = false
+    inp.value    = ""
+    inp.classList.remove("error")
+    inp.focus()
+
+    generateWords()
+    renderWords()
+  }
+
+  generateWords()
+  renderWords()
+
+</script>
+</body>
+</html>
